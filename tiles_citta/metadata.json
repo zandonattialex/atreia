@@ -1,0 +1,72 @@
+{
+  "name": "tile_citta",
+  "version": "1.1.0",
+  "description": "",
+  "attribution": "<a href=\"https://www.maptiler.com/engine/\">Rendered with MapTiler Engine</a>, non-commercial use only",
+  "type": "overlay",
+  "format": "png",
+  "minzoom": "0",
+  "maxzoom": "5",
+  "scale": "1.000000",
+  "bounds": [0.00000000, -0.06198374, 0.08472910, 0.00000000],
+  "profile": "custom",
+  "crs": "EPSG:3857",
+  "proj4": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs",
+  "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+  "tile_matrix": [
+  {
+    "id": "0",
+    "tile_size": [512, 512],
+    "origin": [0.00000000, 0.00000000],
+    "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+    "pixel_size": [32.00000000, -32.00000000],
+    "matrix_size": [1, 1],
+    "scale_denominator": 114285.71428571
+  },
+  {
+    "id": "1",
+    "tile_size": [512, 512],
+    "origin": [0.00000000, 0.00000000],
+    "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+    "pixel_size": [16.00000000, -16.00000000],
+    "matrix_size": [2, 1],
+    "scale_denominator": 57142.85714286
+  },
+  {
+    "id": "2",
+    "tile_size": [512, 512],
+    "origin": [0.00000000, 0.00000000],
+    "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+    "pixel_size": [8.00000000, -8.00000000],
+    "matrix_size": [3, 2],
+    "scale_denominator": 28571.42857143
+  },
+  {
+    "id": "3",
+    "tile_size": [512, 512],
+    "origin": [0.00000000, 0.00000000],
+    "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+    "pixel_size": [4.00000000, -4.00000000],
+    "matrix_size": [5, 4],
+    "scale_denominator": 14285.71428571
+  },
+  {
+    "id": "4",
+    "tile_size": [512, 512],
+    "origin": [0.00000000, 0.00000000],
+    "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+    "pixel_size": [2.00000000, -2.00000000],
+    "matrix_size": [10, 7],
+    "scale_denominator": 7142.85714286
+  },
+  {
+    "id": "5",
+    "tile_size": [512, 512],
+    "origin": [0.00000000, 0.00000000],
+    "extent": [0.00000000, -6900.00000000, 9432.00000000, 0.00000000],
+    "pixel_size": [1.00000000, -1.00000000],
+    "matrix_size": [19, 14],
+    "scale_denominator": 3571.42857143
+  }
+]
+}
