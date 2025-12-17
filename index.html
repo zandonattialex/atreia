@@ -3,84 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Fantasy Map Mobile</title>
+    <title>Mappa Fantasy - Switch 5.4</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body, html { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
         #map { height: 100vh; width: 100vw; }
         
-        #zoom-indicator {
+        /* Pannello UI */
+        #ui-panel {
             position: absolute; top: 10px; right: 10px;
-            background: rgba(0,0,0,0.8); color: white;
-            padding: 8px 12px; font-family: sans-serif; z-index: 1000;
+            background: rgba(0,0,0,0.85); color: white;
+            padding: 12px; font-family: sans-serif; z-index: 1000;
             border-radius: 8px; font-size: 14px; pointer-events: none;
+            border: 1px solid #555;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .status-dot {
+            height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px;
         }
     </style>
 </head>
 <body>
 
-    <div id="zoom-indicator">Zoom: 2</div>
+    <div id="ui-panel">
+        <span id="dot" class="status-dot" style="background: #3498db;"></span>
+        Mappa: <span id="map-type">Mondo</span><br>
+        Zoom: <span id="z-val">2.0</span>
+    </div>
+
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // 1. Configurazione Mappa per Mobile
+        // --- 1. CONFIGURAZIONE MAPPA ---
         const map = L.map('map', {
             crs: L.CRS.Simple,
             minZoom: 1,
             maxZoom: 10,
             zoom: 2,
             center: [0, 0],
-            zoomSnap: 1,        // Cruciale per il pinch-to-zoom su Android
-            bounceAtZoomLimits: true,
-            inertia: true       // Rende lo scorrimento fluido col dito
+            
+            // Impostazioni Zoom Fluido
+            zoomSnap: 0.3,
+            zoomDelta: 0.3,
+            wheelPxPerZoomLevel: 100,
+            
+            inertia: true,
+            bounceAtZoomLimits: true
         });
 
-        // 2. Layer Base (Mondo - Cartelle 0, 1, 2, 3, 4)
+        // --- 2. DEFINIZIONE LAYER ---
+
+        // Mappa Mondo - Visibile fino a 5.4
         const baseLayer = L.tileLayer('tiles_base/{z}/{x}/{y}.png', {
-            minZoom: 1,
-            maxZoom: 4,      
+            maxZoom: 5.4,      
             noWrap: true,
             bounds: [[-5000, -5000], [5000, 5000]]
         }).addTo(map);
 
-        // 3. Layer Città (Dettaglio - Cartelle 0 e 5)
-        // Se a zoom 5 vuoi vedere la cartella 5 (molto zoomata)
+        // Mappa Città - Si attiva DOPO 5.4
         const cityLayer = L.tileLayer('tiles_citta/{z}/{x}/{y}.png', {
-            minZoom: 5,
+            minZoom: 5.4,
             maxZoom: 10,
-            maxNativeZoom: 5,   // Impedisce di cercare cartelle 6, 7, 8...
+            maxNativeZoom: 5, // Usa i file della cartella 5 per gli zoom superiori
             noWrap: true,
             bounds: [[-5000, -5000], [5000, 5000]]
         });
 
-        // 4. Logica di Switch Intelligente
+        // --- 3. LOGICA DI SWITCH A 5.4 ---
         map.on('zoomend', function() {
             const z = map.getZoom();
-            const center = map.getCenter();
-            document.getElementById('zoom-indicator').innerHTML = "Zoom: " + z;
+            const zDisplay = document.getElementById('z-val');
+            const typeDisplay = document.getElementById('map-type');
+            const dot = document.getElementById('dot');
+            
+            zDisplay.innerHTML = z.toFixed(1);
 
-            if (z >= 5) {
+            if (z > 5.4) {
+                // ATTIVA CITTÀ
                 if (map.hasLayer(baseLayer)) map.removeLayer(baseLayer);
-                if (!map.hasLayer(cityLayer)) {
-                    cityLayer.addTo(map);
-                    // Su mobile manteniamo la posizione dello zoom
-                    map.setView(center, z, { animate: false });
-                }
+                if (!map.hasLayer(cityLayer)) cityLayer.addTo(map);
+                
+                typeDisplay.innerHTML = "Città (Dettaglio)";
+                dot.style.background = "#e74c3c"; // Rosso per la città
             } else {
+                // ATTIVA MONDO
                 if (!map.hasLayer(baseLayer)) baseLayer.addTo(map);
                 if (map.hasLayer(cityLayer)) map.removeLayer(cityLayer);
+                
+                typeDisplay.innerHTML = "Mondo";
+                dot.style.background = "#3498db"; // Blu per il mondo
             }
         });
 
-        // Fix per rotazione schermo Android
-        window.addEventListener("orientationchange", function() {
-            setTimeout(() => { map.invalidateSize(); }, 200);
+        // --- 4. GESTIONE SEGNAPOSTI (LOCALSTORAGE) ---
+        let savedMarkers = JSON.parse(localStorage.getItem('fantasyMapMarkers')) || [];
+
+        function createMarker(lat, lng, name) {
+            const m = L.marker([lat, lng]).addTo(map);
+            m.bindPopup(`
+                <b>${name}</b><br>
+                <button onclick="removeMarker(${lat}, ${lng})" style="margin-top:5px; color:red; border:none; background:none; cursor:pointer;">× Elimina</button>
+            `);
+        }
+
+        // Carica marker salvati
+        savedMarkers.forEach(m => createMarker(m.lat, m.lng, m.name));
+
+        // Aggiungi marker al tocco
+        map.on('click', function(e) {
+            const nome = prompt("Nome del luogo:");
+            if (nome) {
+                const newMarker = { lat: e.latlng.lat, lng: e.latlng.lng, name: nome };
+                savedMarkers.push(newMarker);
+                localStorage.setItem('fantasyMapMarkers', JSON.stringify(savedMarkers));
+                createMarker(newMarker.lat, newMarker.lng, nome);
+            }
         });
 
-        // Debug per trovare le coordinate al tocco
-        map.on('click', function(e) {
-            console.log("Touch: " + e.latlng.lat + ", " + e.latlng.lng);
+        // Elimina marker
+        window.removeMarker = function(lat, lng) {
+            savedMarkers = savedMarkers.filter(m => m.lat !== lat && m.lng !== lng);
+            localStorage.setItem('fantasyMapMarkers', JSON.stringify(savedMarkers));
+            location.reload();
+        };
+
+        // Fix rotazione per Android
+        window.addEventListener("orientationchange", () => {
+            setTimeout(() => map.invalidateSize(), 200);
         });
 
     </script>
