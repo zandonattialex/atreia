@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Fantasy Map Mobile</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
+        #map { height: 100vh; width: 100vw; }
+        
+        #zoom-indicator {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,0.8); color: white;
+            padding: 8px 12px; font-family: sans-serif; z-index: 1000;
+            border-radius: 8px; font-size: 14px; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="zoom-indicator">Zoom: 2</div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // 1. Configurazione Mappa per Mobile
+        const map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: 1,
+            maxZoom: 10,
+            zoom: 2,
+            center: [0, 0],
+            zoomSnap: 1,        // Cruciale per il pinch-to-zoom su Android
+            bounceAtZoomLimits: true,
+            inertia: true       // Rende lo scorrimento fluido col dito
+        });
+
+        // 2. Layer Base (Mondo - Cartelle 0, 1, 2, 3, 4)
+        const baseLayer = L.tileLayer('tiles_base/{z}/{x}/{y}.png', {
+            minZoom: 1,
+            maxZoom: 4,      
+            noWrap: true,
+            bounds: [[-5000, -5000], [5000, 5000]]
+        }).addTo(map);
+
+        // 3. Layer Città (Dettaglio - Cartelle 0 e 5)
+        // Se a zoom 5 vuoi vedere la cartella 5 (molto zoomata)
+        const cityLayer = L.tileLayer('tiles_citta/{z}/{x}/{y}.png', {
+            minZoom: 5,
+            maxZoom: 10,
+            maxNativeZoom: 5,   // Impedisce di cercare cartelle 6, 7, 8...
+            noWrap: true,
+            bounds: [[-5000, -5000], [5000, 5000]]
+        });
+
+        // 4. Logica di Switch Intelligente
+        map.on('zoomend', function() {
+            const z = map.getZoom();
+            const center = map.getCenter();
+            document.getElementById('zoom-indicator').innerHTML = "Zoom: " + z;
+
+            if (z >= 5) {
+                if (map.hasLayer(baseLayer)) map.removeLayer(baseLayer);
+                if (!map.hasLayer(cityLayer)) {
+                    cityLayer.addTo(map);
+                    // Su mobile manteniamo la posizione dello zoom
+                    map.setView(center, z, { animate: false });
+                }
+            } else {
+                if (!map.hasLayer(baseLayer)) baseLayer.addTo(map);
+                if (map.hasLayer(cityLayer)) map.removeLayer(cityLayer);
+            }
+        });
+
+        // Fix per rotazione schermo Android
+        window.addEventListener("orientationchange", function() {
+            setTimeout(() => { map.invalidateSize(); }, 200);
+        });
+
+        // Debug per trovare le coordinate al tocco
+        map.on('click', function(e) {
+            console.log("Touch: " + e.latlng.lat + ", " + e.latlng.lng);
+        });
+
+    </script>
+</body>
+</html>
